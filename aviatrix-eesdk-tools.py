@@ -5,7 +5,7 @@ import os
 
 # Function to get required EE API Information from the central (this) account
 def getEEAPIInfo(value):
-    cfn_client = boto3.client('cloudformation')
+    cfn_client = boto3.client('cloudformation', region_name='us-west-2')
     response = cfn_client.describe_stacks()
     response = response['Stacks'][0]['Parameters']
     i=0
@@ -40,27 +40,9 @@ def getOutputs(reg,api_token,event_id,module_id):
             f.write(str(outputs))
     return object_name
 
-# Create a bucket for the Outputs
-bucket_name = ('aviatrix-immersion-day-outputs-'+str(date.today()))
-s3_client = boto3.client('s3')
-response = s3_client.create_bucket(
-    ACL='private',
-    Bucket=bucket_name,
-    CreateBucketConfiguration={
-        'LocationConstraint': 'us-west-2'
-    }
-)
-def putOutputs(bucket_name,fname):
-    s3_resource = boto3.resource('s3')
-    s3_resource.Bucket(bucket_name).upload_file(
-        Filename=fname,
-        Key=fname
-    )
-
-# Get outputs for the control stack in us-west-2 and put them in an S3 bucket
+# Get outputs for the control stack in us-west-2
 fname = getOutputs("us-west-2",api_token,event_id,module_id)
-# Put outputs in local S3
-putOutputs(bucket_name,fname)
+print("Output file name "+fname)
 # Repeat for us-east-1
 fname = getOutputs("us-east-1",api_token,event_id,module_id)
-putOutputs(bucket_name,fname)
+print("Output file name "+fname)
